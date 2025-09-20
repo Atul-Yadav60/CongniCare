@@ -1,4 +1,4 @@
-import  TextRecognition  from "@react-native-ml-kit/text-recognition";
+import TextRecognition from "@react-native-ml-kit/text-recognition";
 
 /**
  * Takes a local image path and uses ML Kit to recognize text in it.
@@ -17,14 +17,12 @@ export async function recognizeTextInImage(imagePath: string): Promise<string> {
 
 /**
  * A simple parser to find common prescription-related keywords from raw text.
- * This can be expanded with more sophisticated logic in the future.
+ * This can be expanded with more sophisticated logic and NLP in the future.
  * @param text The raw text extracted from the OCR process.
  * @returns An object containing the raw text and arrays of potential medications and frequencies.
  */
 export function parsePrescriptionText(text: string) {
   const lines = text.split("\n");
-
-  // Keywords to identify potential medication and frequency lines.
   const medicationKeywords = [
     "tablet",
     "capsule",
@@ -52,11 +50,9 @@ export function parsePrescriptionText(text: string) {
 
   lines.forEach((line) => {
     const lowerLine = line.toLowerCase();
-    // Check if the line contains any of the medication keywords.
     if (medicationKeywords.some((keyword) => lowerLine.includes(keyword))) {
       foundMedications.push(line.trim());
     }
-    // Check if the line contains any of the frequency keywords.
     if (frequencyKeywords.some((keyword) => lowerLine.includes(keyword))) {
       foundFrequencies.push(line.trim());
     }

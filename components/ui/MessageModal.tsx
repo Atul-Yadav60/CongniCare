@@ -21,7 +21,6 @@ interface MessageModalProps {
   type?: "success" | "error";
 }
 
-// Note: The main export is now 'default'
 export default function MessageModal({
   visible,
   title,
@@ -34,7 +33,6 @@ export default function MessageModal({
   const iconName = type === "success" ? "checkmark-circle" : "alert-circle";
   const iconColor = type === "success" ? colors.success : colors.error;
 
-  // Correctly type the style object for GlassCard
   const modalViewStyle: StyleProp<ViewStyle> = [
     styles.modalView,
     { backgroundColor: colors.card },
@@ -98,4 +96,3 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 });
-

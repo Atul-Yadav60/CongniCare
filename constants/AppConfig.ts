@@ -1,3 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
+
+// Define a specific type for our navigation tabs to ensure type safety
+type NavTab = {
+  id: string;
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap; // This is the critical fix
+  route: string;
+};
+
 // App Configuration
 export const APP_CONFIG = {
   name: "Aarogya AI",
@@ -6,7 +16,7 @@ export const APP_CONFIG = {
   tagline: "AI for your health",
 };
 
-// Module Definitions
+// ... (MODULES and QUICK_ACTIONS are unchanged) ...
 export const MODULES = {
   skinAI: {
     id: "skinAI",
@@ -83,8 +93,6 @@ export const MODULES = {
     ],
   },
 };
-
-// Quick Actions
 export const QUICK_ACTIONS = [
   {
     id: "scanSkin",
@@ -110,39 +118,46 @@ export const QUICK_ACTIONS = [
 ];
 
 // Navigation Tabs
-export const NAV_TABS = [
+export const NAV_TABS: NavTab[] = [
   {
     id: "home",
     title: "Home",
     icon: "home",
-    route: "/",
+    route: "/(tabs)/home",
   },
   {
     id: "skinScan",
     title: "Skin Scan",
     icon: "scan",
-    route: "/skinScan",
+    route: "/(tabs)/skinScan",
   },
   {
     id: "prescriptionScanner",
     title: "Scan Rx",
     icon: "medkit",
-    route: "/prescriptionScanner",
+    route: "/(tabs)/prescriptionScanner",
+  },
+  {
+    id: "heartRateMonitor",
+    title: "Heart Rate",
+    icon: "pulse-outline",
+    route: "/(tabs)/heartRateMonitor",
   },
   {
     id: "assistant",
     title: "Assistant",
     icon: "chatbubble",
-    route: "/assistant",
+    route: "/(tabs)/assistant",
   },
   {
     id: "profile",
     title: "Profile",
     icon: "person",
-    route: "/profile",
+    route: "/(tabs)/profile",
   },
 ];
 
+// ... (The rest of your MOCK_DATA, API_ENDPOINTS, etc. remains unchanged) ...
 // Mock Data
 export const MOCK_DATA = {
   user: {
@@ -316,4 +331,3 @@ export const REGIONS = [
     cities: ["Bangalore", "Mysore", "Hubli"],
   },
 ];
- 

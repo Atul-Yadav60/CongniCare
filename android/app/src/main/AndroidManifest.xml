@@ -1,37 +1,101 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-  <uses-permission android:name="android.permission.CAMERA"/>
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-  <uses-permission android:name="android.permission.VIBRATE"/>
-  <uses-permission android:name="android.permission.WAKE_LOCK"/>
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <queries>
-    <intent>
-      <action android:name="android.intent.action.VIEW"/>
-      <category android:name="android.intent.category.BROWSABLE"/>
-      <data android:scheme="https"/>
-    </intent>
-  </queries>
-  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true">
-    <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
-    <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
-    <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
-    <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.LAUNCHER"/>
-      </intent-filter>
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="aarogya-ai"/>
-        <data android:scheme="exp+aarogya-ai"/>
-      </intent-filter>
-    </activity>
-  </application>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    
+    <!-- ========= CORE PERMISSIONS FOR BLUETOOTH & CONNECTIVITY ========= -->
+   
+
+    <!-- Required for Bluetooth Low Energy (BLE) scanning on Android 12+ -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <!-- Required to connect to and communicate with paired Bluetooth devices on Android 12+ -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- Required for BLE scanning on older Android versions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Required to send/receive data from a backend server -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+
+   
+    <!-- ========= PERMISSIONS FOR PLANNED APP FEATURES ==================== -->
+   
+
+    <!-- For sending health alerts and notifications to the user (Required for Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- For providing haptic feedback with notifications -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- To keep the app running during long data syncs with the smartwatch -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- For features like scanning a QR code on a device or taking a profile picture -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- For features like recording voice notes for health logs -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+
+    <!-- ========= PERMISSIONS FOR FILE & DATA HANDLING ==================== -->
+ 
+
+    <!-- For reading exported health reports or other files. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- For saving health reports. Note: This is only for Android 9 (API 28) and below.
+         Modern Android versions use a different, more secure system called Scoped Storage. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+
+
+   
+    <!-- ========= HIGHLY SENSITIVE PERMISSIONS (Use with caution) ========= -->
+    
+
+    <!-- Allows the app to draw on top of other apps. Only use if absolutely necessary. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
+
+    <!-- This section helps your app discover other apps that can open web links -->
+    <queries>
+      <intent>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" />
+      </intent>
+    </queries>
+
+    <application
+      android:name=".MainApplication"
+      android:label="@string/app_name"
+      android:icon="@mipmap/ic_launcher"
+      android:roundIcon="@mipmap/ic_launcher_round"
+      android:allowBackup="true"
+      android:theme="@style/AppTheme"
+      android:usesCleartextTraffic="true"
+      tools:targetApi="28">
+
+      <!-- Expo-related metadata for updates, useful in React Native projects -->
+      <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
+      <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
+      <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
+
+      <activity
+        android:name=".MainActivity"
+        android:label="@string/app_name"
+        android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode"
+        android:launchMode="singleTask"
+        android:windowSoftInputMode="adjustResize"
+        android:exported="true"
+        android:screenOrientation="portrait">
+        <!-- This makes your app the main entry point -->
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+        <!-- This allows your app to be opened by clicking a custom link (e.g., from a website) -->
+        <intent-filter>
+          <action android:name="android.intent.action.VIEW"/>
+          <category android:name="android.intent.category.DEFAULT"/>
+          <category android:name="android.intent.category.BROWSABLE"/>
+          <data android:scheme="aarogya-ai"/>
+          <data android:scheme="exp+aarogya-ai"/>
+        </intent-filter>
+      </activity>
+    </application>
 </manifest>
+

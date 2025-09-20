@@ -1,16 +1,8 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useColorScheme } from "../../hooks/useColorScheme";
-import Colors from "../../constants/Colors";
-import { NAV_TABS } from "../../constants/AppConfig";
-
-// Define a type for the tab objects to ensure type safety
-type NavTab = {
-  id: string;
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap; // This ensures the icon name is valid
-  route: string;
-};
+import { useColorScheme } from "@/hooks/useColorScheme";
+import Colors from "@/constants/Colors";
+import { NAV_TABS } from "@/constants/AppConfig";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -43,8 +35,8 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* Map over the NAV_TABS array to create the screens dynamically */}
-      {NAV_TABS.map((tab: NavTab) => (
+      {/* This automatically maps all tabs from your AppConfig, including the new Heart Rate tab */}
+      {NAV_TABS.map((tab) => (
         <Tabs.Screen
           key={tab.id}
           name={tab.id}
@@ -58,20 +50,14 @@ export default function TabLayout() {
         />
       ))}
 
-      {/* These screens are part of the tabs layout but are not visible in the tab bar */}
+      {/* These screens are part of the tabs stack but are not visible on the tab bar */}
       <Tabs.Screen
         name="skinScanResult"
-        options={{
-          href: null, // This hides the screen from the tab bar
-          headerShown: false,
-        }}
+        options={{ href: null, headerShown: false }}
       />
       <Tabs.Screen
         name="prescriptionResult"
-        options={{
-          href: null, // This hides the screen from the tab bar
-          headerShown: false,
-        }}
+        options={{ href: null, headerShown: false }}
       />
     </Tabs>
   );

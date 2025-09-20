@@ -1,321 +1,243 @@
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState, useRef, useEffect } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { GlassCard } from '../../components/ui/GlassCard';
-import Colors from '../../constants/Colors';
-import { useColorScheme } from '../../hooks/useColorScheme';
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
+import { useColorScheme } from "../../hooks/useColorScheme";
+import Colors from "../../constants/Colors";
+import { GlassCard } from "../../components/ui/GlassCard";
+import { supabase } from "../../utils/supabase";
+
+interface Message {
+  id: string;
+  text: string;
+  sender: "user" | "bot";
+}
+
+// IMPORTANT: Replace this with your actual Supabase Function URL
+// You can get this after you deploy the function in the next step.
+const SUPABASE_FUNCTION_URL =
+  "https://popkggkhybnfewugjuix.supabase.co/functions/v1/chat-rag";
 
 export default function AssistantScreen() {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'dark'];
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: '1',
-      type: 'assistant',
-      text: 'Hello! I\'m your AI health assistant. How can I help you today?',
-      timestamp: new Date(),
-    },
-  ]);
+  const colors = Colors[colorScheme ?? "dark"];
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
 
-  const quickActions = [
-    {
-      id: 'scanSkin',
-      title: 'Scan Skin',
-      icon: 'camera',
-      color: colors.primary,
-    },
-    {
-      id: 'checkDrug',
-      title: 'Check Drug',
-      icon: 'shield-checkmark',
-      color: colors.secondary,
-    },
-    {
-      id: 'findSpecialist',
-      title: 'Find Specialist',
-      icon: 'medical',
-      color: colors.accent,
-    },
-    {
-      id: 'myTrends',
-      title: 'My Trends',
-      icon: 'trending-up',
-      color: colors.info,
-    },
-  ];
+  useEffect(() => {
+    setMessages([
+      {
+        id: "1",
+        text: "Hello! I can search your health reports or the internet for general medical questions. How can I help?",
+        sender: "bot",
+      },
+    ]);
+  }, []);
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
+  const handleSend = async () => {
+    if (input.trim() === "" || isLoading) return;
 
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now().toString(),
-      type: 'user',
-      text: message,
-      timestamp: new Date(),
+      text: input,
+      sender: "user",
     };
+    setMessages((prev) => [...prev, userMessage]);
+    const query = input;
+    setInput("");
+    setIsLoading(true);
 
-    setMessages(prev => [...prev, userMessage]);
-    setMessage('');
+    const botMessageId = (Date.now() + 1).toString();
+    setMessages((prev) => [
+      ...prev,
+      { id: botMessageId, text: "", sender: "bot" },
+    ]);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        text: 'I understand your concern. Let me help you with that. Would you like me to guide you to the appropriate health module?',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
-  };
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Authentication session not found.");
+      if (SUPABASE_FUNCTION_URL.includes("YOUR_SUPABASE_FUNCTION_URL")) {
+        throw new Error(
+          "Please replace the placeholder URL in the code before using the chatbot."
+        );
+      }
 
-  const handleQuickAction = (action: any) => {
-    switch (action.id) {
-      case 'scanSkin':
-        router.push('/modules/skinAI');
-        break;
-      case 'checkDrug':
-        router.push('/modules/trustMed');
-        break;
-      case 'findSpecialist':
-        router.push('/modules/symptoCare');
-        break;
-      case 'myTrends':
-        router.push('/health');
-        break;
+      const response = await fetch(SUPABASE_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Failed to get a response from the assistant."
+        );
+      }
+
+      // Updated logic to handle a single JSON response
+      const data = await response.json();
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId ? { ...msg, text: data.response } : msg
+        )
+      );
+    } catch (error: any) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId
+            ? { ...msg, text: `Error: ${error.message}` }
+            : msg
+        )
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={100}
     >
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          AI Assistant
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-          Your personal health companion
-        </Text>
+        <Text style={[styles.title, { color: colors.text }]}>AI Assistant</Text>
       </View>
-
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Quick Actions
-        </Text>
-        <View style={styles.quickActionsGrid}>
-          {quickActions.map((action) => (
-            <TouchableOpacity
-              key={action.id}
-              style={styles.quickActionCard}
-              onPress={() => handleQuickAction(action)}
-            >
-              <GlassCard style={styles.quickActionContent}>
-                <View style={[styles.quickActionIcon, { backgroundColor: action.color + '20' }]}>
-                  <Ionicons name={action.icon as any} size={24} color={action.color} />
-                </View>
-                <Text style={[styles.quickActionTitle, { color: colors.text }]}>
-                  {action.title}
-                </Text>
-              </GlassCard>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Chat Messages */}
-      <View style={styles.chatContainer}>
-        <ScrollView
-          style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.messageList}
+        renderItem={({ item }) => (
+          <View
+            style={[
+              styles.messageContainer,
+              item.sender === "user"
+                ? styles.userMessageContainer
+                : styles.botMessageContainer,
+            ]}
+          >
+            <GlassCard
               style={[
-                styles.messageContainer,
-                msg.type === 'user' ? styles.userMessage : styles.assistantMessage,
+                styles.messageBubble,
+                item.sender === "user"
+                  ? { backgroundColor: colors.primary + "30" }
+                  : { backgroundColor: colors.card },
               ]}
             >
-                             <GlassCard style={[
-                 styles.messageBubble,
-                 msg.type === 'user' ? styles.userBubble : styles.assistantBubble,
-               ] as any}>
-                <Text style={[styles.messageText, { color: colors.text }]}>
-                  {msg.text}
-                </Text>
-                <Text style={[styles.messageTime, { color: colors.onSurfaceVariant }]}>
-                  {formatTime(msg.timestamp)}
-                </Text>
-              </GlassCard>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Input Area */}
-      <View style={[styles.inputContainer, { borderTopColor: colors.cardBorder }]}>
-        <View style={[styles.inputWrapper, { borderColor: colors.outline }]}>
-          <TextInput
-            style={[styles.input, { color: colors.text }]}
-            placeholder="Ask me anything about your health..."
-            placeholderTextColor={colors.onSurfaceVariant}
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            maxLength={500}
+              <Text style={[styles.messageText, { color: colors.text }]}>
+                {item.text}
+              </Text>
+              {isLoading && item.sender === "bot" && !item.text && (
+                <ActivityIndicator color={colors.primary} />
+              )}
+            </GlassCard>
+          </View>
+        )}
+      />
+      <View style={[styles.inputContainer, { borderTopColor: colors.outline }]}>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              backgroundColor: colors.surfaceVariant,
+              borderColor: colors.outline,
+            },
+          ]}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Ask a question..."
+          placeholderTextColor={colors.onSurfaceVariant}
+          editable={!isLoading}
+        />
+        <TouchableOpacity
+          onPress={handleSend}
+          disabled={isLoading}
+          style={styles.sendButton}
+        >
+          <Ionicons
+            name="send"
+            size={24}
+            color={isLoading ? colors.onSurfaceVariant : colors.primary}
           />
-          <TouchableOpacity
-            style={[styles.sendButton, { backgroundColor: colors.primary }]}
-            onPress={handleSendMessage}
-            disabled={!message.trim()}
-          >
-            <Ionicons
-              name="send"
-              size={20}
-              color={colors.text}
-            />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === "android" ? 40 : 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontWeight: "bold",
   },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.8,
-  },
-  section: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  quickActionCard: {
-    width: '48%',
-  },
-  quickActionContent: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  quickActionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  chatContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    paddingVertical: 16,
+  messageList: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   messageContainer: {
-    marginBottom: 16,
+    marginVertical: 5,
+    maxWidth: "80%",
   },
-  userMessage: {
-    alignItems: 'flex-end',
+  userMessageContainer: {
+    alignSelf: "flex-end",
   },
-  assistantMessage: {
-    alignItems: 'flex-start',
+  botMessageContainer: {
+    alignSelf: "flex-start",
   },
   messageBubble: {
-    maxWidth: '80%',
-    padding: 12,
-  },
-  userBubble: {
-    backgroundColor: 'rgba(46, 230, 214, 0.2)',
-  },
-  assistantBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 15,
+    borderRadius: 20,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
-    marginBottom: 4,
-  },
-  messageTime: {
-    fontSize: 12,
-    alignSelf: 'flex-end',
   },
   inputContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
     borderTopWidth: 1,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    borderWidth: 1,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    maxHeight: 100,
-    marginRight: 8,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginRight: 10,
+    borderWidth: 1,
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 5,
   },
 });
