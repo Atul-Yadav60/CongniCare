@@ -1,13 +1,20 @@
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, ViewStyle, Platform } from 'react-native';
-import Colors, { glassmorphism } from '../../constants/Colors';
-import { useColorScheme } from '../../hooks/useColorScheme';
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useRef } from "react";
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  ViewStyle,
+  Platform,
+  StyleProp,
+} from "react-native";
+import Colors, { glassmorphism } from "../../constants/Colors";
+import { useColorScheme } from "../../hooks/useColorScheme";
 
 interface GlassCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   intensity?: number;
   borderRadius?: number;
   padding?: number;
@@ -31,9 +38,9 @@ export function GlassCard({
   elevation = 8,
 }: GlassCardProps) {
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'dark'];
-  const glass = glassmorphism[colorScheme ?? 'dark'];
-  
+  const colors = Colors[colorScheme ?? "dark"];
+  const glass = glassmorphism[colorScheme ?? "dark"];
+
   // Animations
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -54,7 +61,7 @@ export function GlassCard({
         }),
       ]).start();
     }
-  }, []);
+  }, [animated, opacityAnim, shadowAnim]);
 
   const handlePressIn = () => {
     if (animated && onPress) {
@@ -93,7 +100,7 @@ export function GlassCard({
     >
       {gradient ? (
         <LinearGradient
-          colors={[glass.background, 'rgba(255, 255, 255, 0.1)']}
+          colors={[glass.background, "rgba(255, 255, 255, 0.1)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[
@@ -107,12 +114,12 @@ export function GlassCard({
         >
           <BlurView
             intensity={intensity}
-            tint={colorScheme ?? 'dark'}
+            tint={colorScheme ?? "dark"}
             style={[
               styles.blurView,
               {
                 borderRadius,
-                backgroundColor: 'transparent',
+                backgroundColor: "transparent",
               },
             ]}
           >
@@ -122,7 +129,7 @@ export function GlassCard({
       ) : (
         <BlurView
           intensity={intensity}
-          tint={colorScheme ?? 'dark'}
+          tint={colorScheme ?? "dark"}
           style={[
             styles.blurView,
             {
@@ -162,10 +169,10 @@ const styles = StyleSheet.create({
   container: {
     ...Platform.select({
       web: {
-        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.15)",
       },
       default: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: {
           width: 0,
           height: 4,
@@ -176,10 +183,10 @@ const styles = StyleSheet.create({
   },
   gradientContainer: {
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   blurView: {
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
 });

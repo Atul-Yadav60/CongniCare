@@ -1,10 +1,10 @@
-import { Stack, router } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import Colors from "../constants/Colors";
-import { useColorScheme } from "../hooks/useColorScheme";
-import { AuthProvider, useAuth } from "../hooks/useAuth";
+import { Stack, router } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import Colors from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,19 +15,19 @@ function RootLayoutNav() {
     if (!loading) {
       SplashScreen.hideAsync();
       if (session) {
-        router.replace("/(tabs)/home");
+        router.replace('/(tabs)/home');
       } else {
-        router.replace("/(auth)/login");
+        router.replace('/(auth)/login');
       }
     }
   }, [session, loading]);
 
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? "dark"];
+  const colors = Colors[colorScheme ?? 'dark'];
 
   return (
     <>
-      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerStyle: {
@@ -35,12 +35,12 @@ function RootLayoutNav() {
           },
           headerTintColor: colors.text,
           headerTitleStyle: {
-            fontWeight: "600",
+            fontWeight: '600',
           },
           contentStyle: {
             backgroundColor: colors.background,
           },
-          animation: "slide_from_right",
+          animation: 'slide_from_right',
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
