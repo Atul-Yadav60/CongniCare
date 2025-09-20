@@ -20,6 +20,7 @@ import { GradientButton } from '../../components/ui/GradientButton';
 import { APP_CONFIG } from '../../constants/AppConfig';
 import Colors, { gradients } from '../../constants/Colors';
 import { useColorScheme } from '../../hooks/useColorScheme';
+import { supabase } from '@/utils/supabase';
 
 const { height } = Dimensions.get('window');
 
@@ -53,17 +54,25 @@ export default function LoginScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      router.replace('/(tabs)/home');
-    }, 2000);
-  };
+  //  LoginScreen
+
+const handleLogin = async () => {
+  if (!email || !password) {
+    Alert.alert('Error', 'Please fill in all fields');
+    return;
+  }
+  setLoading(true);
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    Alert.alert('Error', error.message);
+  }
+  // The onAuthStateChange listener in useAuth will handle navigation
+  setLoading(false);
+};
 
   return (
     <KeyboardAvoidingView
